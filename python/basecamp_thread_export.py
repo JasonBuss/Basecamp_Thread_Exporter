@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Export a Basecamp Classic post and all its comments to readable UTF-8 text."""
 import argparse
-import getpass
 import html
 import os
 import re
 import sys
+import keyring
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
@@ -145,7 +145,12 @@ def main():
     parser.add_argument('-o', '--output', help='Output text filename')
     args = parser.parse_args()
     url = args.url or input('Basecamp thread URL: ').strip()
-    token = os.environ.get('BASECAMP_API_TOKEN') or getpass.getpass('Basecamp API token: ')
+    token = keyring.get_password("BasecampClassic", "api_token")
+
+    if not token:
+        sys.exit(
+            "Basecamp API token not found in Windows Credential Manager."
+        )
     try:
         path, count = export(url, token, args.output)
         print(f'Exported {count} comments to {path.resolve()}')
